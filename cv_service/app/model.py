@@ -41,7 +41,8 @@ def load_model() -> torch.nn.Module:
 
     checkpoint_path = hf_hub_download(
         repo_id="flaviodell/oxford-pets-resnet50",
-        filename="best_model.pth"
+        filename="best_model.pth",
+        cache_dir="/tmp/hf_cache"
     )
 
     # Rebuild the same architecture used in project 2

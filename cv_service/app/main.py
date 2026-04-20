@@ -1,28 +1,22 @@
+import logging
+import io
+import urllib.request
+
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
+from pydantic import BaseModel
 from app.schemas import PredictionResponse, HealthResponse
 from app.model import load_model, predict
-import logging
+from mangum import Mangum
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Load model at startup (warm-up)
-    logger.info("Loading CV model...")
-    load_model()
-    logger.info("CV model ready.")
-    yield
-
 
 app = FastAPI(
     title="Pet Breed CV Service",
     description="ResNet50 inference endpoint for Oxford Pets breed classification",
     version="1.0.0",
-    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -33,6 +27,10 @@ app.add_middleware(
 )
 
 
+class PredictURLRequest(BaseModel):
+    image_url: str
+
+
 @app.get("/health", response_model=HealthResponse)
 def health():
     """Liveness probe."""
@@ -40,15 +38,31 @@ def health():
 
 
 @app.post("/predict", response_model=PredictionResponse)
-async def predict_breed(file: UploadFile = File(...)):
-    """
-    Accepts a JPEG/PNG image, returns the predicted breed + top-5.
-    """
+def predict_from_url(req: PredictURLRequest):
+    """Accepts a JSON body with image_url, returns predicted breed + top-5."""
+    try:
+        with urllib.request.urlopen(req.image_url, timeout=10) as r:
+            image_bytes = r.read()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Cannot fetch image: {e}")
+
+    try:
+        result = predict(image_bytes)
+    except Exception as e:
+        logger.error(f"Inference error: {e}")
+        raise HTTPException(status_code=500, detail="Inference failed")
+
+    return result
+
+
+@app.post("/predict-file", response_model=PredictionResponse)
+async def predict_from_file(file: UploadFile = File(...)):
+    """Accepts a multipart image upload, returns predicted breed + top-5."""
     if file.content_type not in ("image/jpeg", "image/png", "image/webp"):
         raise HTTPException(status_code=415, detail="Unsupported media type")
 
     image_bytes = await file.read()
-    if len(image_bytes) > 10 * 1024 * 1024:  # 10 MB limit
+    if len(image_bytes) > 10 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="Image too large (max 10 MB)")
 
     try:
@@ -58,3 +72,7 @@ async def predict_breed(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail="Inference failed")
 
     return result
+
+
+# Lambda handler
+handler = Mangum(app, lifespan="off", api_gateway_base_path="/prod")
