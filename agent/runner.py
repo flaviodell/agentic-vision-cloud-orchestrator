@@ -26,6 +26,15 @@ from agent.state import AgentState
 load_dotenv()
 logger = logging.getLogger(__name__)
 
+
+def _default_tools() -> list:
+    """
+    Return the default tool list for production use.
+    Import is deferred so unit tests that don't need tools can skip it.
+    """
+    from agent.tools import ALL_TOOLS
+    return ALL_TOOLS
+
 # System prompt — describes the agent's role and available capabilities.
 SYSTEM_PROMPT = """You are an expert veterinary AI assistant specialized in cat and dog breeds.
 
@@ -44,7 +53,7 @@ If you are not confident, say so — do not hallucinate breed names or medical f
 def run_agent(
     user_input: str,
     history: Optional[List[BaseMessage]] = None,
-    tools: list = [],
+    tools: list = None,
     include_system_prompt: bool = True,
 ) -> AgentState:
     """
@@ -61,6 +70,8 @@ def run_agent(
         The final AgentState after the graph has finished.
         Access the last AI response via: result["messages"][-1].content
     """
+    if tools is None:
+        tools = _default_tools()
     graph = build_graph(tools)
 
     messages: List[BaseMessage] = []
@@ -100,8 +111,8 @@ class AgentSession:
         session.chat("What are the common health issues for that breed?")
     """
 
-    def __init__(self, tools: list = []):
-        self.tools = tools
+    def __init__(self, tools: list = None):
+        self.tools = tools if tools is not None else _default_tools()
         self.history: List[BaseMessage] = []
         self.breed_identified: Optional[str] = None
         logger.info("[AgentSession] New session started.")
