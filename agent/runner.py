@@ -15,6 +15,7 @@ Usage (multi-turn, preserving history):
 
 import logging
 import os
+import uuid
 from typing import List, Optional
 
 from dotenv import load_dotenv
@@ -48,6 +49,20 @@ then provide detailed expert information about that breed.
 
 Always be concise, accurate, and cite your reasoning when using tools.
 If you are not confident, say so — do not hallucinate breed names or medical facts."""
+
+
+def _save_turn_to_memory(role: str, text: str, session_id: str, breed: str = None):
+    """
+    Persist a single conversation turn to Pinecone memory.
+    Silently skips if PINECONE_API_KEY is not set (graceful degradation).
+    """
+    if not os.getenv("PINECONE_API_KEY"):
+        return
+    try:
+        from agent.memory import save_turn
+        save_turn(role=role, text=text, session_id=session_id, breed=breed)
+    except Exception as e:
+        logger.warning(f"[runner] Memory save failed (non-critical): {e}")
 
 
 def run_agent(
@@ -115,7 +130,8 @@ class AgentSession:
         self.tools = tools if tools is not None else _default_tools()
         self.history: List[BaseMessage] = []
         self.breed_identified: Optional[str] = None
-        logger.info("[AgentSession] New session started.")
+        self.session_id: str = str(uuid.uuid4())
+        logger.info(f"[AgentSession] New session started. session_id={self.session_id}")
 
     def chat(self, user_input: str, verbose: bool = True) -> str:
         """
@@ -145,13 +161,18 @@ class AgentSession:
 
         reply = result["messages"][-1].content
 
+        # Save both user input and AI reply to Pinecone memory (non-blocking).
+        _save_turn_to_memory("user", user_input, self.session_id, self.breed_identified)
+        _save_turn_to_memory("assistant", reply, self.session_id, self.breed_identified)
+
         if verbose:
             print(f"\n[Agent]: {reply}\n")
 
         return reply
 
     def reset(self):
-        """Clear session history and start fresh."""
+        """Clear session history and start fresh (new session_id generated)."""
         self.history = []
         self.breed_identified = None
-        logger.info("[AgentSession] Session reset.")
+        self.session_id = str(uuid.uuid4())
+        logger.info(f"[AgentSession] Session reset. New session_id={self.session_id}")

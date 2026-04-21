@@ -38,7 +38,7 @@ def web_search(query: str) -> str:
     logger.info(f"[web_search] Query: {query!r}")
 
     try:
-        from duckduckgo_search import DDGS
+        from ddgs import DDGS
 
         with DDGS() as ddgs:
             raw = list(ddgs.text(query, max_results=_MAX_RESULTS))
