@@ -15,6 +15,7 @@ Usage (multi-turn, preserving history):
 
 import logging
 import os
+import time
 import uuid
 from typing import List, Optional
 
@@ -108,8 +109,18 @@ def run_agent(
     }
 
     logger.info(f"[run_agent] Starting graph. Input: {user_input[:80]}...")
+    _t0 = time.time()
     final_state = graph.invoke(initial_state)
-    logger.info("[run_agent] Graph finished.")
+    _elapsed = time.time() - _t0
+    logger.info(f"[run_agent] Graph finished in {_elapsed:.3f}s.")
+
+    # Record agent turn latency (non-blocking).
+    try:
+        from agent.monitoring.metrics import AGENT_TURN_LATENCY
+        AGENT_TURN_LATENCY.observe(_elapsed)
+    except Exception:
+        pass
+
     return final_state
 
 
@@ -165,6 +176,17 @@ class AgentSession:
         _save_turn_to_memory("user", user_input, self.session_id, self.breed_identified)
         _save_turn_to_memory("assistant", reply, self.session_id, self.breed_identified)
 
+        # Record per-tool-call metrics from ToolMessages in history (non-blocking).
+        try:
+            from langchain_core.messages import AIMessage
+            from agent.monitoring.metrics import record_tool_call
+            for msg in result["messages"]:
+                if isinstance(msg, AIMessage) and msg.tool_calls:
+                    for tc in msg.tool_calls:
+                        record_tool_call(tc.get("name", "unknown"))
+        except Exception:
+            pass
+
         if verbose:
             print(f"\n[Agent]: {reply}\n")
 
@@ -172,6 +194,17 @@ class AgentSession:
 
     def reset(self):
         """Clear session history and start fresh (new session_id generated)."""
+        # Record session metrics before clearing (non-blocking).
+        try:
+            from agent.monitoring.metrics import record_session
+            # Count only HumanMessage turns as "turns" for the metric.
+            from langchain_core.messages import HumanMessage as _HM
+            turns = sum(1 for m in self.history if isinstance(m, _HM))
+            if turns > 0:
+                record_session(turns)
+        except Exception:
+            pass
+
         self.history = []
         self.breed_identified = None
         self.session_id = str(uuid.uuid4())

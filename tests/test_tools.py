@@ -144,7 +144,7 @@ class TestWebSearch:
         mock_ddgs.__enter__ = lambda s: mock_ddgs
         mock_ddgs.__exit__ = MagicMock(return_value=False)
 
-        with patch("duckduckgo_search.DDGS", return_value=mock_ddgs):
+        with patch("ddgs.DDGS", return_value=mock_ddgs):
             from agent.tools.search_tool import web_search
             result = web_search.invoke({"query": "Siamese cat health problems"})
 
@@ -159,7 +159,7 @@ class TestWebSearch:
         mock_ddgs.__enter__ = lambda s: mock_ddgs
         mock_ddgs.__exit__ = MagicMock(return_value=False)
 
-        with patch("duckduckgo_search.DDGS", return_value=mock_ddgs):
+        with patch("ddgs.DDGS", return_value=mock_ddgs):
             from agent.tools.search_tool import web_search
             result = web_search.invoke({"query": "anything"})
 
