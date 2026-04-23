@@ -1,24 +1,12 @@
 version: "3.9"
 
 services:
-  cv_service:
-    build:
-      context: ./cv_service
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    environment:
-      - HF_TOKEN=${HF_TOKEN}
-    restart: unless-stopped
-
   prometheus:
     image: prom/prometheus:v2.52.0
     ports:
       - "9090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    depends_on:
-      - cv_service
     restart: unless-stopped
 
   grafana:

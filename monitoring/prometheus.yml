@@ -3,13 +3,13 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
-  # CV inference service — exposes /metrics/ via prometheus_client
+  # CV inference service — running on Lambda (metrics not available from Lambda)
+  # For local monitoring, run cv_service manually: docker run -p 8000:8000 vision-inference-service
   - job_name: "cv_service"
     static_configs:
-      - targets: ["cv_service:8000"]
+      - targets: ["host.docker.internal:8000"]
     metrics_path: /metrics/
 
-  # Prometheus self-monitoring
   - job_name: "prometheus"
     static_configs:
       - targets: ["localhost:9090"]

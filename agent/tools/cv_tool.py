@@ -54,9 +54,9 @@ def cv_predict(image_url: str) -> str:
     except httpx.ConnectError:
         msg = (
             f"Cannot connect to CV service at {base_url}. "
-            "Make sure the cv_service container is running: "
-            "cd cv_service && docker build -t cv-service . && "
-            "docker run -p 8000:8000 cv-service"
+            "Check that CV_SERVICE_URL in .env points to the correct endpoint "
+            "(AWS Lambda: https://8r6akcsyx5.execute-api.eu-south-1.amazonaws.com/prod "
+            "or local Docker: http://localhost:8000)."
         )
         logger.error(f"[cv_predict] {msg}")
         return json.dumps({"error": msg})
