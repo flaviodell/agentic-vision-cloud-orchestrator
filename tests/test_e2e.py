@@ -1,5 +1,5 @@
 """
-End-to-end tests for the LangGraph agentic system — Phase 8.
+End-to-end tests for the LangGraph agentic system.
 
 Strategy
 --------

@@ -16,6 +16,7 @@ __pycache__/
 
 # Jupyter
 .ipynb_checkpoints/
+notebooks/monitoring_dashboard.png
 
 # Docker
 .dockerignore

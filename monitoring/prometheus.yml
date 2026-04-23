@@ -3,11 +3,13 @@ global:
   evaluation_interval: 15s
 
 scrape_configs:
+  # CV inference service — exposes /metrics/ via prometheus_client
   - job_name: "cv_service"
     static_configs:
       - targets: ["cv_service:8000"]
     metrics_path: /metrics/
 
+  # Prometheus self-monitoring
   - job_name: "prometheus"
     static_configs:
       - targets: ["localhost:9090"]

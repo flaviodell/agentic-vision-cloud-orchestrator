@@ -2,11 +2,12 @@
 DB query tool — in-memory breed knowledge base.
 
 Provides structured, factual data about the 37 Oxford Pets breeds without
-requiring an external service. This acts as a fast first-pass lookup before
-falling back to web_search for topics not covered here.
+requiring an external service. Acts as a fast, deterministic first-pass lookup
+for exact breed queries.
 
-In Phase 6, this module will be replaced (or supplemented) by a real
-vector database (Pinecone / pgvector) that supports semantic retrieval.
+This tool is complemented by Pinecone-based semantic search,
+available via memory_tool.breed_semantic_search, which supports fuzzy queries
+like "find a calm cat for small apartments".
 """
 
 import json

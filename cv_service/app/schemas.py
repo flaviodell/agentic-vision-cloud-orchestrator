@@ -1,3 +1,10 @@
+"""
+Pydantic schemas for the CV service API.
+ 
+PredictionResponse: returned by /predict and /predict-file endpoints.
+HealthResponse:     returned by /health endpoint.
+"""
+
 from pydantic import BaseModel
 from typing import List
 

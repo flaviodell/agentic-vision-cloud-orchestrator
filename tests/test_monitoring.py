@@ -1,5 +1,5 @@
 """
-Unit tests for Phase 7 — Prometheus monitoring metrics.
+Prometheus monitoring metrics.
 
 All tests are fully offline (no API keys, no Docker, no real model loads).
 Tests import metric objects directly and verify counters/histograms behave correctly.

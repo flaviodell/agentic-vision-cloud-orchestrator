@@ -32,10 +32,9 @@ _model = None  # singleton
 
 
 def load_model() -> torch.nn.Module:
-    global BREEDS
-        
     """Download checkpoint from HuggingFace Hub and load ResNet50."""
-    global _model
+    global _model, BREEDS
+    
     if _model is not None:
         return _model
 
@@ -45,7 +44,7 @@ def load_model() -> torch.nn.Module:
         cache_dir="/tmp/hf_cache"
     )
 
-    # Rebuild the same architecture used in project 2
+    # Rebuild the same architecture used in project "llm-cv-finetuning-pipeline"
     model = models.resnet50(weights=None)
     model.fc = torch.nn.Sequential(
         torch.nn.Dropout(p=0.5),

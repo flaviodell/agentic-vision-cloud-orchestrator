@@ -27,8 +27,6 @@ def build_graph(tools: list = []):
 
     Args:
         tools: List of LangChain-compatible tool objects to bind to the LLM.
-               Pass an empty list during Phase 4 (no tools yet).
-               Phase 5 will pass the real tools here.
 
     Returns:
         A compiled LangGraph runnable (supports .invoke() and .stream()).
@@ -66,14 +64,13 @@ def build_graph(tools: list = []):
     return compiled
 
 
-# Singleton compiled graph (no tools — will be replaced in Phase 5).
+# Singleton compiled graph
 _graph = None
 
 
 def get_graph(tools: list = []) -> object:
     """
     Return a compiled graph. Rebuilds if tools list changes.
-    For Phase 4, always returns the no-tool graph singleton.
     """
     global _graph
     if _graph is None or tools:

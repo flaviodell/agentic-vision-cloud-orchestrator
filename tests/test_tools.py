@@ -1,5 +1,5 @@
 """
-Unit tests for Phase 5 — agent tools.
+Agent tools tests.
 
 All external calls (httpx, duckduckgo_search) are mocked.
 Tests run fully offline with no API keys required.

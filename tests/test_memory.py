@@ -1,5 +1,5 @@
 """
-Tests for Phase 6 — memory and vector database.
+Memory and vector database tests.
 
 These tests use mocks to avoid real Pinecone/OpenAI calls during CI.
 Integration tests (marked @pytest.mark.integration) require real API keys
